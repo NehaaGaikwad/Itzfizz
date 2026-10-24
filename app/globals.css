@@ -88,7 +88,6 @@ body {
 
 .metric {
   max-width: 14rem;
-  opacity: 0;
 }
 
 .metric--top-right,
@@ -115,7 +114,7 @@ body {
 .road {
   align-self: center;
   background: var(--road);
-  height: clamp(7rem, 16.67vw, 15rem);
+  height: clamp(9rem, 19vw, 17rem);
   isolation: isolate;
   position: relative;
 }
@@ -176,7 +175,7 @@ body {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  --car-width: clamp(16rem, 37vw, 34rem);
+  --car-width: clamp(20rem, 45vw, 40rem);
   width: var(--car-width);
   z-index: 3;
 }
@@ -208,19 +207,11 @@ body {
   transform: translateY(-50%);
   white-space: nowrap;
   width: 100%;
-  z-index: 2;
-}
-
-.hero__title-accent {
-  color: var(--accent);
+  z-index: 4;
 }
 
 .hero__letter--accent {
   color: var(--accent);
-}
-
-.hero__letter {
-  opacity: 0;
 }
 
 .hero__letter--space {
@@ -258,7 +249,7 @@ body {
   }
 
   .hero-car-motion {
-    --car-width: 15rem;
+    --car-width: 20rem;
     width: var(--car-width);
   }
 
@@ -302,7 +293,7 @@ body {
   }
 
   .hero-car-motion {
-    --car-width: clamp(8.25rem, 38vw, 12rem);
+    --car-width: clamp(13rem, 65vw, 16rem);
     width: var(--car-width);
   }
 
@@ -326,7 +317,7 @@ body {
   }
 
   .hero__scene {
-    grid-template-rows: 6.2rem 7rem 6.2rem;
+    grid-template-rows: 6.2rem 8.5rem 6.2rem;
     margin-block: 0.75rem;
   }
 
@@ -339,11 +330,20 @@ body {
   }
 
   .road {
-    height: 7rem;
+    height: 8.5rem;
+  }
+
+  .road__edge--bottom,
+  .road__trail {
+    bottom: 1.25rem;
+  }
+
+  .road__edge--top {
+    top: 1.25rem;
   }
 
   .hero-car-motion {
-    --car-width: 13rem;
+    --car-width: 17rem;
     width: var(--car-width);
   }
 }

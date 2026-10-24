@@ -12,6 +12,7 @@ const metrics = [
 ];
 
 const headline = "WELCOME ITZFIZZ".split("");
+const carImageSrc = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/images/glossy-red-supercar.png`;
 
 export function HeroScene() {
   const scrollRef = useRef<HTMLElement>(null);
@@ -23,13 +24,14 @@ export function HeroScene() {
   const metricsRef = useRef<HTMLElement[]>([]);
 
   useLayoutEffect(() => {
-    const { gsap } = getGsap();
+    const { gsap, ScrollTrigger } = getGsap();
     const scope = sceneRef.current;
     const scroll = scrollRef.current;
     const road = roadRef.current;
     const car = carRef.current;
     const trail = trailRef.current;
     const title = titleRef.current;
+    const refreshScrollTrigger = () => ScrollTrigger.refresh();
 
     if (!scope || !scroll || !road || !car || !trail || !title) return;
 
@@ -40,44 +42,94 @@ export function HeroScene() {
 
       if (reduceMotion) {
         gsap.set([letters, metricCards], { autoAlpha: 1, clearProps: "transform" });
-        gsap.set(trail, { scaleX: 1 });
+        gsap.set(trail, { scaleX: 1, transformOrigin: "left center" });
         return;
       }
 
-      gsap.set(letters, { autoAlpha: 0 });
+      gsap.set(letters, { autoAlpha: 0, y: 12 });
       gsap.set(metricCards, { autoAlpha: 0, y: 18 });
       gsap.set(trail, { scaleX: 0, transformOrigin: "left center" });
 
-      const timeline = gsap.timeline({
-        scrollTrigger: {
-          trigger: scroll,
-          start: "top top",
-          end: "bottom bottom",
-          scrub: true,
-          invalidateOnRefresh: true,
-        },
-      });
+      gsap
+        .timeline({ delay: 0.12 })
+        .to(letters, { autoAlpha: 1, duration: 0.42, ease: "power2.out", stagger: 0.035, y: 0 })
+        .to(metricCards, { autoAlpha: 1, duration: 0.38, ease: "power2.out", stagger: 0.12, y: 0 }, "-=0.12");
 
-      timeline
-        .to(trail, { scaleX: 1, duration: 1 }, 0)
-        .to(car, { x: () => Math.max(0, road.clientWidth - car.clientWidth - 72), duration: 1, ease: "none" }, 0)
-        .to(letters, { autoAlpha: 1, duration: 0.035, stagger: 0.045 }, 0.55)
-        .to(metricCards, { autoAlpha: 1, y: 0, duration: 0.12, stagger: 0.16 }, 0.8);
+      gsap.timeline({
+        scrollTrigger: {
+          end: "bottom bottom",
+          invalidateOnRefresh: true,
+          scrub: 0.35,
+          start: "top top",
+          trigger: scroll,
+        },
+      })
+        .to(trail, { duration: 1, ease: "none", scaleX: 1 }, 0)
+        .to(
+          car,
+          {
+            duration: 1,
+            ease: "none",
+            x: () => Math.max(0, road.clientWidth - car.clientWidth - 72),
+          },
+          0,
+        );
+
+      window.addEventListener("load", refreshScrollTrigger, { once: true });
     }, scope);
 
-    return () => context.revert();
+    return () => {
+      window.removeEventListener("load", refreshScrollTrigger);
+      context.revert();
+    };
   }, []);
 
   return (
     <main className="hero-scroll" ref={scrollRef}>
       <section className="hero" aria-labelledby="hero-title" ref={sceneRef}>
-        <div className="hero__topline" aria-label="ITZFIZZ scroll experience"><span>ITZFIZZ</span><span>SCROLL TO DRIVE</span></div>
-        <div className="hero__scene">
-          <div className="metrics metrics--top">{metrics.slice(0, 2).map((metric, index) => <article className={`metric metric--${metric.position}`} key={metric.value} ref={(node) => { if (node) metricsRef.current[index] = node; }}><p className="metric__value">{metric.value}</p><p className="metric__copy">{metric.copy}</p></article>)}</div>
-          <div className="road" aria-hidden="true" ref={roadRef}><div className="road__edge road__edge--top" /><div className="road__edge road__edge--bottom" /><div className="road__marks" /><div className="road__trail" ref={trailRef} /><div className="hero-car-motion" ref={carRef}><Image alt="" aria-hidden="true" className="hero-car" height={724} priority src="/images/glossy-red-supercar.png" width={2172} /></div></div>
-          <h1 className="hero__title" id="hero-title" ref={titleRef}>{headline.map((character, index) => <span className={`hero__letter${character === " " ? " hero__letter--space" : ""}${index >= 8 ? " hero__letter--accent" : ""}`} key={`${character}-${index}`}>{character === " " ? " " : character}</span>)}</h1>
-          <div className="metrics metrics--bottom">{metrics.slice(2).map((metric, index) => <article className={`metric metric--${metric.position}`} key={metric.value} ref={(node) => { if (node) metricsRef.current[index + 2] = node; }}><p className="metric__value">{metric.value}</p><p className="metric__copy">{metric.copy}</p></article>)}</div>
+        <div className="hero__topline" aria-label="ITZFIZZ scroll experience">
+          <span>ITZFIZZ</span>
+          <span>Scroll to drive</span>
         </div>
+
+        <div className="hero__scene">
+          <div className="metrics metrics--top">
+            {metrics.slice(0, 2).map((metric, index) => (
+              <article className={`metric metric--${metric.position}`} key={metric.value} ref={(node) => { if (node) metricsRef.current[index] = node; }}>
+                <p className="metric__value">{metric.value}</p>
+                <p className="metric__copy">{metric.copy}</p>
+              </article>
+            ))}
+          </div>
+
+          <div className="road" aria-hidden="true" ref={roadRef}>
+            <div className="road__edge road__edge--top" />
+            <div className="road__edge road__edge--bottom" />
+            <div className="road__marks" />
+            <div className="road__trail" ref={trailRef} />
+            <div className="hero-car-motion" ref={carRef}>
+              <Image alt="" aria-hidden="true" className="hero-car" height={724} priority src={carImageSrc} width={2172} />
+            </div>
+          </div>
+
+          <h1 aria-label="Welcome ITZFIZZ" className="hero__title" id="hero-title" ref={titleRef}>
+            {headline.map((character, index) => (
+              <span aria-hidden="true" className={`hero__letter${character === " " ? " hero__letter--space" : ""}${index >= 8 ? " hero__letter--accent" : ""}`} key={`${character}-${index}`}>
+                {character === " " ? "\u00a0" : character}
+              </span>
+            ))}
+          </h1>
+
+          <div className="metrics metrics--bottom">
+            {metrics.slice(2).map((metric, index) => (
+              <article className={`metric metric--${metric.position}`} key={metric.value} ref={(node) => { if (node) metricsRef.current[index + 2] = node; }}>
+                <p className="metric__value">{metric.value}</p>
+                <p className="metric__copy">{metric.copy}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+
         <p className="scroll-cue"><span className="scroll-cue__line" aria-hidden="true" />Scroll to drive</p>
       </section>
     </main>
