@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #111311;
+  --surface: #f3f3ed;
+  --road: #262a27;
+  --line: #d4d7d0;
+  --accent: #a7ef41;
+  --muted: #747872;
+  --font-sans: Arial, Helvetica, sans-serif;
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2.5rem;
+  --space-5: 4rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+.foundation-shell {
+  display: grid;
+  align-content: center;
+  min-height: 100svh;
+  padding: clamp(1.5rem, 6vw, 7rem);
+  gap: var(--space-3);
+}
+
+.eyebrow {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(3rem, 9vw, 8rem);
+  letter-spacing: -0.075em;
+  line-height: 0.88;
+  margin: 0;
+  max-width: 10ch;
+}
+
+.foundation-copy {
+  color: var(--muted);
+  font-size: clamp(1rem, 1.4vw, 1.25rem);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 37rem;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--ink);
+}
