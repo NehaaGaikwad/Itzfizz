@@ -12,8 +12,8 @@ const carImageSrc = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/images/glossy-re
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 const HEADLINE = "WELCOME ITZFIZZ";
-const GHOST = "rgba(241, 239, 233, 0.16)"; // unlit letter on dark asphalt
-const INK = "#0b0b0c"; // lit letter on the painted trail
+const GHOST = "transparent"; // invisible until car sweeps past
+const INK = "#0b0b0c";        // lit letter on the painted trail
 
 // The trail's leading edge sits this far along the car (0 = rear, 1 = nose),
 // so the paint always appears from underneath the car body.
@@ -42,29 +42,23 @@ export function HeroScene() {
           reduce: "(prefers-reduced-motion: reduce)",
         },
         (ctx) => {
-          // Reduced motion: show the finished state, no movement.
+          // Reduced motion: snap to finished state immediately.
           if ((ctx.conditions as { reduce?: boolean }).reduce) {
             gsap.set(car, { x: () => road.clientWidth - car.offsetWidth });
             gsap.set(trail, { scaleX: 1 });
             gsap.set(letters, { color: INK });
             gsap.set(fills, { scaleY: 1 });
+            gsap.set(cards, { autoAlpha: 1, y: 0 });
             gsap.set(cardText, { color: INK });
             return;
           }
 
-          // ---------------------------------------------------------------
-          // 1. Intro: time-based, plays once on load
-          // ---------------------------------------------------------------
+          // Intro: only topline + car slide-in. Letters & cards appear on scroll.
+          gsap.set(cards, { autoAlpha: 0, y: 24 }); // hidden until car passes
           gsap
             .timeline({ defaults: { ease: "power3.out" } })
             .from(q(".js-fade"), { autoAlpha: 0, y: 16, duration: 0.9, stagger: 0.1 })
-            .from(
-              letters,
-              { autoAlpha: 0, yPercent: 60, rotateX: -70, duration: 1.1, stagger: 0.05 },
-              0.2
-            )
-            .from(carBody, { xPercent: -140, duration: 1.4, ease: "expo.out" }, 0.35)
-            .from(cards, { autoAlpha: 0, y: 40, duration: 1, stagger: 0.14 }, 0.7);
+            .from(carBody, { xPercent: -140, duration: 1.4, ease: "expo.out" }, 0.35);
 
           // ---------------------------------------------------------------
           // 2. Scroll: progress-based, scrubbed with smoothing
@@ -91,20 +85,24 @@ export function HeroScene() {
           const tiltTo = gsap.quickTo(carBody, "rotation", { duration: 0.5, ease: "power3.out" });
 
           const sync = (self?: ScrollTrigger) => {
-            const edge = gsap.getProperty(car, "x") as number + carWidth * TRAIL_EDGE;
-            setTrail(gsap.utils.clamp(0, 1, edge / roadWidth));
+            const carX  = gsap.getProperty(car, "x") as number;
 
-            // Light up each letter once the paint reaches its centre.
+            // Trail grows from left — driven by the car's mid-point
+            const trailEdge = carX + carWidth * TRAIL_EDGE;
+            setTrail(gsap.utils.clamp(0, 1, trailEdge / roadWidth));
+
+            // Letters only reveal AFTER the car's left edge has fully cleared past
+            // the letter’s centre — so no letter is ever visible under the car.
             letterCenters.forEach((center, i) => {
-              const on = edge >= center;
+              const on = carX >= center;
               if (on === lit[i]) return;
               lit[i] = on;
-              gsap.to(letters[i], { color: on ? INK : GHOST, duration: 0.35, overwrite: "auto" });
+              gsap.to(letters[i], { color: on ? INK : GHOST, duration: 0.3, overwrite: "auto" });
               if (on) {
                 gsap.fromTo(
                   letters[i],
                   { scale: 1.25 },
-                  { scale: 1, duration: 0.6, ease: "back.out(3)", overwrite: "auto" }
+                  { scale: 1, duration: 0.55, ease: "back.out(3)", overwrite: "auto" }
                 );
               }
             });
@@ -147,16 +145,15 @@ export function HeroScene() {
           );
           tl.to(q(".js-hint"), { autoAlpha: 0, duration: 0.08 }, 0);
 
-          // Each metric card fills with its colour as the car passes.
-          cards.forEach((_, i) => {
-            const at = 0.2 + i * 0.18;
-            tl.fromTo(
-              fills[i],
-              { scaleY: 0 },
-              { scaleY: 1, duration: 0.14, ease: "power2.out" },
-              at
-            );
-            tl.to(cardText[i], { color: INK, duration: 0.08 }, at + 0.03);
+          // Each metric card pops in then fills with its colour as the car passes.
+          cards.forEach((card, i) => {
+            const at = 0.2 + i * 0.2;
+            // card appears
+            tl.to(card, { autoAlpha: 1, y: 0, duration: 0.1, ease: "power2.out" }, at - 0.04);
+            // colour fill sweeps up
+            tl.fromTo(fills[i], { scaleY: 0 }, { scaleY: 1, duration: 0.14, ease: "power2.out" }, at);
+            // text goes dark so it reads on the coloured fill
+            tl.to(cardText[i], { color: "#111311", duration: 0.08 }, at + 0.03);
           });
 
           sync();
@@ -180,20 +177,20 @@ export function HeroScene() {
         </span>
       </header>
 
-      {/* scene: 2 cards · road · 2 cards */}
-      <div className="flex flex-1 flex-col justify-center gap-3 px-5 sm:px-10">
+        {/* scene: 2 cards · road · 2 cards */}
+      <div className="flex flex-1 flex-col justify-center gap-6 px-5 sm:px-10">
 
         {/* top 2 stat cards */}
-        <ul className="grid grid-cols-2 gap-3 sm:gap-4">
+        <ul className="grid grid-cols-2 gap-6">
           {stats.slice(0, 2).map((s) => (
             <li
               key={s.value + s.label}
-              className="js-stat relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5"
+              className="js-stat relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-5"
             >
               <div className="js-stat-fill absolute inset-0 origin-bottom scale-y-0" style={{ background: s.accent }} />
-              <div className="js-stat-text relative text-chalk">
-                <p className="font-display text-3xl font-bold sm:text-4xl">{s.value}</p>
-                <p className="mt-1 text-xs leading-snug text-chalk/70 sm:text-sm">{s.label}</p>
+              <div className="js-stat-text relative" style={{ color: "#111311" }}>
+                <p className="font-display text-4xl font-bold leading-tight">{s.value}</p>
+                <p className="mt-1 text-sm leading-snug opacity-80">{s.label}</p>
               </div>
             </li>
           ))}
@@ -201,9 +198,9 @@ export function HeroScene() {
 
         {/* road */}
         <div className="js-road relative h-[clamp(6rem,min(22vh,28vw),13rem)] w-full overflow-hidden bg-asphalt">
-          {/* white dashed edge lines */}
-          <div className="absolute inset-x-0 top-[7%] h-[3px] bg-[repeating-linear-gradient(to_right,white_0_48px,transparent_48px_96px)]" />
-          <div className="absolute inset-x-0 bottom-[7%] h-[3px] bg-[repeating-linear-gradient(to_right,white_0_48px,transparent_48px_96px)]" />
+          {/* solid white edge lines */}
+          <div className="absolute inset-x-0 top-[7%] h-[2px] bg-white" />
+          <div className="absolute inset-x-0 bottom-[7%] h-[2px] bg-white" />
           <div className="absolute inset-x-0 top-0 h-px bg-white/20" />
           <div className="absolute inset-x-0 bottom-0 h-px bg-white/20" />
 
@@ -244,16 +241,16 @@ export function HeroScene() {
         </div>
 
         {/* bottom 2 stat cards */}
-        <ul className="grid grid-cols-2 gap-3 sm:gap-4">
+        <ul className="grid grid-cols-2 gap-6">
           {stats.slice(2).map((s) => (
             <li
               key={s.value + s.label}
-              className="js-stat relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5"
+              className="js-stat relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-5"
             >
               <div className="js-stat-fill absolute inset-0 origin-bottom scale-y-0" style={{ background: s.accent }} />
-              <div className="js-stat-text relative text-chalk">
-                <p className="font-display text-3xl font-bold sm:text-4xl">{s.value}</p>
-                <p className="mt-1 text-xs leading-snug text-chalk/70 sm:text-sm">{s.label}</p>
+              <div className="js-stat-text relative" style={{ color: "#111311" }}>
+                <p className="font-display text-4xl font-bold leading-tight">{s.value}</p>
+                <p className="mt-1 text-sm leading-snug opacity-80">{s.label}</p>
               </div>
             </li>
           ))}
