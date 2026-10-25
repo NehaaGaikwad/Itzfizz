@@ -217,7 +217,7 @@ export function HeroScene() {
             className="js-trail-solid pointer-events-none absolute inset-y-[15%] left-0 z-[1] w-0"
             style={{
               backgroundImage:
-                `linear-gradient(to right, #c8f04a 0%, #c8f04a calc(100% - ${FEATHER_PX}px), rgb(200 240 74 / 0) 100%)`,
+                `linear-gradient(to right, #c8f04a 0%, #c8f04a calc(100% - ${FEATHER_PX}px), rgba(200, 240, 74, 0) 100%)`,
             }}
           />
 
