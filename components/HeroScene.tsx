@@ -66,13 +66,11 @@ export function HeroScene() {
           // 2. Scroll: progress-based, scrubbed with smoothing
           // ---------------------------------------------------------------
           let roadWidth = 1;
-          let carWidth = 0;
           let letterCenters: number[] = [];
           const lit = letters.map(() => false);
 
           const measure = () => {
             roadWidth = road.clientWidth;
-            carWidth = car.offsetWidth;
             const roadLeft = road.getBoundingClientRect().left;
             letterCenters = letters.map((el) => {
               const r = el.getBoundingClientRect();
@@ -86,7 +84,6 @@ export function HeroScene() {
           // FEATHER_PX wide, regardless of how far the trail has grown.
           gsap.set(trail, { "--tw": "0px" });
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const setTrailWidth = gsap.quickSetter(trail, "--tw", "px") as (v: number) => void;
           const tiltTo = gsap.quickTo(carBody, "rotation", { duration: 0.5, ease: "power3.out" });
 
@@ -118,8 +115,7 @@ export function HeroScene() {
             if (self) tiltTo(gsap.utils.clamp(-3, 3, self.getVelocity() / 600));
           };
 
-          let tl: gsap.core.Timeline;
-          tl = gsap.timeline({
+          const tl = gsap.timeline({
             defaults: { ease: "none" },
             onUpdate: function (this: gsap.core.Timeline) {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
