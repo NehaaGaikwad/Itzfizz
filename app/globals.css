@@ -1,364 +1,54 @@
 @import "tailwindcss";
 
-:root {
-  --ink: #111311;
-  --surface: #f3f3ed;
-  --road: #202522;
-  --road-deep: #151a17;
-  --line: #c9cec4;
-  --accent: #b7f54e;
-  --muted: #6f756e;
-  --white: #fbfcf7;
-  --font-sans: Arial, Helvetica, sans-serif;
+@theme {
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --color-ink: #0b0b0c;
+  --color-asphalt: #18181b;
+  --color-paint: #c8f04a;
+  --color-sky: #6ac9ff;
+  --color-chalk: #f1efe9;
+  --color-ember: #ff7a2f;
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html {
-  background: var(--surface);
-  color: var(--ink);
-  font-family: var(--font-sans);
-  overflow-x: hidden;
+html,
+body {
+  background: var(--color-ink);
+  color: var(--color-chalk);
 }
 
 body {
-  margin: 0;
-  min-width: 320px;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-.hero {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  min-height: 100svh;
-  overflow: hidden;
-  padding: clamp(1.25rem, 2.8vw, 2.5rem);
-  position: sticky;
-  top: 0;
-}
-
-.hero-scroll {
-  min-height: 340svh;
-}
-
-.hero__topline,
-.scroll-cue {
-  align-items: center;
-  color: var(--muted);
-  display: flex;
-  font-size: 0.64rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.hero__topline {
-  justify-content: space-between;
-}
-
-.hero__scene {
-  align-self: center;
-  display: grid;
-  grid-template-rows: minmax(7rem, 0.8fr) minmax(7rem, 0.88fr) minmax(7rem, 0.8fr);
-  margin: clamp(1.4rem, 3vw, 3rem) auto;
-  max-width: 90rem;
-  min-width: 0;
-  position: relative;
-  width: 100%;
-}
-
-.metrics {
-  display: grid;
-  gap: clamp(1rem, 4vw, 6rem);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  padding-inline: clamp(0.25rem, 7vw, 8.5rem);
-}
-
-.metrics--top {
-  align-items: end;
-  padding-bottom: clamp(0.8rem, 2.5vh, 1.75rem);
-}
-
-.metrics--bottom {
-  align-items: start;
-  padding-top: clamp(0.8rem, 2.5vh, 1.75rem);
-}
-
-.metric {
-  max-width: 14rem;
-}
-
-.metric--top-right,
-.metric--bottom-right {
-  justify-self: end;
-}
-
-.metric__value {
-  font-size: clamp(2rem, 4.5vw, 4.5rem);
-  font-weight: 800;
-  letter-spacing: -0.08em;
-  line-height: 0.78;
-  margin: 0;
-}
-
-.metric__copy {
-  color: var(--muted);
-  font-size: clamp(0.68rem, 0.9vw, 0.82rem);
-  line-height: 1.3;
-  margin: 0.7rem 0 0;
-  max-width: 16ch;
-}
-
-.road {
-  align-self: center;
-  background: var(--road);
-  height: clamp(9rem, 19vw, 17rem);
-  isolation: isolate;
-  position: relative;
-}
-
-.road::before {
-  background: linear-gradient(90deg, var(--road-deep), transparent 12%, transparent 88%, var(--road-deep));
-  content: "";
-  inset: 0;
-  pointer-events: none;
-  position: absolute;
-}
-
-.road__edge {
-  background: var(--accent);
-  height: 2px;
-  left: 0;
-  opacity: 0.9;
-  position: absolute;
-  right: 0;
-}
-
-.road__edge--top {
-  top: clamp(1rem, 2.3vw, 2rem);
-}
-
-.road__edge--bottom {
-  bottom: clamp(1rem, 2.3vw, 2rem);
-}
-
-.road__marks {
-  background: repeating-linear-gradient(
-    90deg,
-    transparent 0 4.75rem,
-    rgb(251 252 247 / 42%) 4.75rem 6.5rem,
-    transparent 6.5rem 10rem
+/* Dashed lane marking down the middle of the road */
+.lane {
+  background-image: repeating-linear-gradient(
+    to right,
+    rgb(255 255 255 / 0.22) 0 48px,
+    transparent 48px 96px
   );
-  height: 2px;
-  inset-inline: clamp(1.5rem, 5vw, 6rem);
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 1;
 }
 
-.road__trail {
-  background: var(--accent);
-  bottom: clamp(1rem, 2.3vw, 2rem);
-  height: 3px;
-  left: 0;
-  position: absolute;
-  right: 0;
-  transform-origin: left center;
-  z-index: 2;
+/* Subtle bob for the scroll hint (decorative, not scroll-driven) */
+@keyframes nudge {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(6px);
+  }
 }
 
-.hero-car-motion {
-  left: clamp(1.1rem, 4.6vw, 4.5rem);
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  --car-width: clamp(20rem, 45vw, 40rem);
-  width: var(--car-width);
-  z-index: 3;
-}
-
-.hero-car {
-  display: block;
-  height: auto;
-  max-width: 100%;
-  object-fit: contain;
-  width: 100%;
-}
-
-.hero__title {
-  align-items: center;
-  color: var(--white);
-  display: flex;
-  font-size: clamp(1.2rem, 3.7vw, 4rem);
-  font-weight: 800;
-  gap: 0;
-  justify-content: center;
-  letter-spacing: 0.22em;
-  line-height: 1;
-  margin: 0;
-  padding-inline: clamp(13rem, 28vw, 26rem) 1rem;
-  pointer-events: none;
-  position: absolute;
-  text-indent: 0.22em;
-  top: 50%;
-  transform: translateY(-50%);
-  white-space: nowrap;
-  width: 100%;
-  z-index: 4;
-}
-
-.hero__letter--accent {
-  color: var(--accent);
-}
-
-.hero__letter--space {
-  display: inline-block;
-  width: 0.7em;
-}
-
-.scroll-cue {
-  gap: 0.65rem;
-  justify-content: center;
-  padding-top: 1rem;
-}
-
-.scroll-cue__line {
-  background: var(--ink);
-  display: inline-block;
-  height: 1px;
-  opacity: 0.55;
-  width: 2rem;
-}
-
-::selection {
-  background: var(--accent);
-  color: var(--ink);
-}
-
-@media (max-width: 900px) {
-  .hero__scene {
-    grid-template-rows: minmax(10rem, 1fr) minmax(7rem, 0.7fr) minmax(10rem, 1fr);
-  }
-
-  .hero__title {
-    font-size: clamp(1.2rem, 3.2vw, 2rem);
-    padding-left: clamp(7rem, 17vw, 10rem);
-  }
-
-  .hero-car-motion {
-    --car-width: 20rem;
-    width: var(--car-width);
-  }
-
-}
-
-@media (max-width: 700px) {
-  .hero {
-    padding: 1.25rem;
-  }
-
-  .hero__scene {
-    grid-template-rows: minmax(9rem, 1fr) 7.5rem minmax(9rem, 1fr);
-    margin-block: 1rem;
-  }
-
-  .metrics {
-    gap: 1.5rem;
-    padding-inline: 0;
-  }
-
-  .metric {
-    max-width: 8.5rem;
-  }
-
-  .metric__value {
-    font-size: clamp(1.7rem, 10vw, 2.7rem);
-  }
-
-  .metric__copy {
-    font-size: 0.65rem;
-    margin-top: 0.55rem;
-  }
-
-  .road {
-    height: 7.5rem;
-    margin-inline: -1.25rem;
-  }
-
-  .road__marks {
-    inset-inline: 0.75rem;
-  }
-
-  .hero-car-motion {
-    --car-width: clamp(13rem, 65vw, 16rem);
-    width: var(--car-width);
-  }
-
-  .hero__title {
-    align-items: center;
-    font-size: clamp(0.75rem, 3.6vw, 1.05rem);
-    left: 8rem;
-    letter-spacing: 0.15em;
-    padding: 0 0.65rem;
-    right: 0;
-    text-indent: 0.15em;
-    white-space: nowrap;
-    width: auto;
-  }
-
-}
-
-@media (max-height: 650px) and (min-width: 701px) {
-  .hero {
-    padding-block: 1rem;
-  }
-
-  .hero__scene {
-    grid-template-rows: 6.2rem 8.5rem 6.2rem;
-    margin-block: 0.75rem;
-  }
-
-  .metric__value {
-    font-size: clamp(1.8rem, 4vw, 3.5rem);
-  }
-
-  .metric__copy {
-    margin-top: 0.45rem;
-  }
-
-  .road {
-    height: 8.5rem;
-  }
-
-  .road__edge--bottom,
-  .road__trail {
-    bottom: 1.25rem;
-  }
-
-  .road__edge--top {
-    top: 1.25rem;
-  }
-
-  .hero-car-motion {
-    --car-width: 17rem;
-    width: var(--car-width);
-  }
+.animate-nudge {
+  animation: nudge 1.8s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-scroll {
-    min-height: 100svh;
-  }
-
-  .road__trail {
-    transform: scaleX(1) !important;
-  }
-
-  .metric,
-  .hero__letter {
-    opacity: 1;
+  .animate-nudge {
+    animation: none;
   }
 }
