@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef } from "react";
+import React, { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -15,9 +15,11 @@ const HEADLINE = "WELCOME ITZFIZZ";
 const GHOST = "transparent"; // invisible until car sweeps past
 const INK = "#0b0b0c";        // lit letter on the painted trail
 
-// The trail's leading edge sits this far along the car (0 = rear, 1 = nose),
+// The trail leading edge sits this far along the car (0 = rear, 1 = nose),
 // so the paint always appears from underneath the car body.
 const TRAIL_EDGE = 0.5;
+// Fixed pixel width of the soft gradient feather at the trail leading edge.
+const FEATHER_PX = 120;
 
 export function HeroScene() {
   const root = useRef<HTMLElement>(null);
@@ -45,7 +47,7 @@ export function HeroScene() {
           // Reduced motion: snap to finished state immediately.
           if ((ctx.conditions as { reduce?: boolean }).reduce) {
             gsap.set(car, { x: () => road.clientWidth - car.offsetWidth });
-            gsap.set(trail, { scaleX: 1 });
+            gsap.set(trail, { "--tw": (road.clientWidth + FEATHER_PX) + "px" });
             gsap.set(letters, { color: INK });
             gsap.set(fills, { scaleY: 1 });
             gsap.set(cards, { autoAlpha: 1, y: 0 });
@@ -63,8 +65,6 @@ export function HeroScene() {
           // ---------------------------------------------------------------
           // 2. Scroll: progress-based, scrubbed with smoothing
           // ---------------------------------------------------------------
-          // Layout values are measured only on refresh (load/resize), never
-          // inside the scroll handler, so scrolling triggers no reflow.
           let roadWidth = 1;
           let carWidth = 0;
           let letterCenters: number[] = [];
@@ -81,18 +81,26 @@ export function HeroScene() {
           };
           measure();
 
-          const setTrail = gsap.quickSetter(trail, "scaleX") as (v: number) => void;
+          // Give GSAP ownership of --tw (trail width in px).
+          // The CSS mask-image reads this so the feather is always
+          // FEATHER_PX wide, regardless of how far the trail has grown.
+          gsap.set(trail, { "--tw": "0px" });
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const setTrailWidth = gsap.quickSetter(trail, "--tw", "px") as (v: number) => void;
           const tiltTo = gsap.quickTo(carBody, "rotation", { duration: 0.5, ease: "power3.out" });
 
           const sync = (self?: ScrollTrigger) => {
-            const carX  = gsap.getProperty(car, "x") as number;
+            const carX = gsap.getProperty(car, "x") as number;
 
-            // Trail grows from left — driven by the car's mid-point
-            const trailEdge = carX + carWidth * TRAIL_EDGE;
-            setTrail(gsap.utils.clamp(0, 1, trailEdge / roadWidth));
+            // --tw = pixel position where fully-opaque paint ends.
+            // Solid green fills behind the car; gradient fades to transparent
+            // right at the car's left edge â€” feather extends 250 px to the left.
+            setTrailWidth(
+              gsap.utils.clamp(0, roadWidth + FEATHER_PX, carX)
+            );
 
-            // Letters only reveal AFTER the car's left edge has fully cleared past
-            // the letter’s centre — so no letter is ever visible under the car.
+            // Letters only reveal AFTER the car has passed them.
             letterCenters.forEach((center, i) => {
               const on = carX >= center;
               if (on === lit[i]) return;
@@ -107,15 +115,12 @@ export function HeroScene() {
               }
             });
 
-            // Lean the car slightly into the direction of travel.
             if (self) tiltTo(gsap.utils.clamp(-3, 3, self.getVelocity() / 600));
           };
 
           let tl: gsap.core.Timeline;
           tl = gsap.timeline({
             defaults: { ease: "none" },
-            // Runs after the timeline has rendered, so the trail and letters
-            // read the car's position for this exact frame.
             onUpdate: function (this: gsap.core.Timeline) {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               sync((this as any).scrollTrigger ?? undefined);
@@ -125,7 +130,7 @@ export function HeroScene() {
               start: "top top",
               end: () => "+=" + window.innerHeight * 2.2,
               pin: true,
-              scrub: 1.2, // seconds of easing lag between scroll and animation
+              scrub: 1.2,
               invalidateOnRefresh: true,
               onRefresh: (self) => {
                 measure();
@@ -135,8 +140,6 @@ export function HeroScene() {
             },
           });
 
-          // Car drives across the full road: it starts with the trail edge at 0
-          // (no paint visible) and ends with the trail edge at the road's end.
           tl.fromTo(
             car,
             { x: () => -car.offsetWidth * TRAIL_EDGE },
@@ -145,14 +148,10 @@ export function HeroScene() {
           );
           tl.to(q(".js-hint"), { autoAlpha: 0, duration: 0.08 }, 0);
 
-          // Each metric card pops in then fills with its colour as the car passes.
           cards.forEach((card, i) => {
             const at = 0.2 + i * 0.2;
-            // card appears
             tl.to(card, { autoAlpha: 1, y: 0, duration: 0.1, ease: "power2.out" }, at - 0.04);
-            // colour fill sweeps up
             tl.fromTo(fills[i], { scaleY: 0 }, { scaleY: 1, duration: 0.14, ease: "power2.out" }, at);
-            // text goes dark so it reads on the coloured fill
             tl.to(cardText[i], { color: "#111311", duration: 0.08 }, at + 0.03);
           });
 
@@ -177,15 +176,15 @@ export function HeroScene() {
         </span>
       </header>
 
-        {/* scene: 2 cards · road · 2 cards */}
+      {/* scene: 2 cards road 2 cards */}
       <div className="flex flex-1 flex-col justify-center gap-6 px-5 sm:px-10">
 
         {/* top 2 stat cards */}
-        <ul className="grid grid-cols-2 gap-6">
+        <ul className="flex justify-center gap-16 sm:gap-32 md:gap-48 lg:gap-64 w-full">
           {stats.slice(0, 2).map((s) => (
             <li
               key={s.value + s.label}
-              className="js-stat relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-5"
+              className="js-stat relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-5 w-44 sm:w-48 shrink-0"
             >
               <div className="js-stat-fill absolute inset-0 origin-bottom scale-y-0" style={{ background: s.accent }} />
               <div className="js-stat-text relative" style={{ color: "#111311" }}>
@@ -198,16 +197,26 @@ export function HeroScene() {
 
         {/* road */}
         <div className="js-road relative h-[clamp(6rem,min(22vh,28vw),13rem)] w-full overflow-hidden bg-asphalt">
-          {/* solid white edge lines */}
           <div className="absolute inset-x-0 top-[7%] h-[2px] bg-white" />
           <div className="absolute inset-x-0 bottom-[7%] h-[2px] bg-white" />
           <div className="absolute inset-x-0 top-0 h-px bg-white/20" />
           <div className="absolute inset-x-0 bottom-0 h-px bg-white/20" />
 
-          {/* paint trail */}
-          <div className="js-trail absolute inset-x-0 inset-y-[15%] origin-left scale-x-0 bg-paint will-change-transform" />
+          {/*
+            Paint trail: full-width div always present, revealed left-to-right
+            by a CSS mask driven by --tw (px). Mask is fully opaque up to
+            (--tw - 72px) then fades to transparent at --tw, giving a constant
+            72 px soft feather at the leading edge at every scroll position.
+          */}
+          <div
+            className="js-trail absolute inset-x-0 inset-y-[15%] bg-paint"
+            style={{
+              maskImage: "linear-gradient(to right, black calc(var(--tw, 0px) - 120px), transparent var(--tw, 0px))",
+              WebkitMaskImage: "linear-gradient(to right, black calc(var(--tw, 0px) - 120px), transparent var(--tw, 0px))",
+            } as React.CSSProperties}
+          />
 
-          {/* headline — right-padded so car never overlaps text */}
+          {/* headline */}
           <h1
             className="absolute inset-0 flex items-center justify-center gap-[0.12em] pr-[clamp(8rem,22vw,18rem)] font-display text-[clamp(1.5rem,5.6vw,6.5rem)] font-bold leading-none [perspective:600px]"
             aria-label="Welcome Itzfizz"
@@ -241,11 +250,11 @@ export function HeroScene() {
         </div>
 
         {/* bottom 2 stat cards */}
-        <ul className="grid grid-cols-2 gap-6">
+        <ul className="flex justify-center gap-16 sm:gap-32 md:gap-48 lg:gap-64 w-full">
           {stats.slice(2).map((s) => (
             <li
               key={s.value + s.label}
-              className="js-stat relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-5"
+              className="js-stat relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-5 w-44 sm:w-48 shrink-0"
             >
               <div className="js-stat-fill absolute inset-0 origin-bottom scale-y-0" style={{ background: s.accent }} />
               <div className="js-stat-text relative" style={{ color: "#111311" }}>
@@ -258,12 +267,16 @@ export function HeroScene() {
 
         {/* scroll hint */}
         <p className="js-hint text-center text-[10px] uppercase tracking-[0.4em] text-chalk/40">
-          <span className="js-fade inline-block animate-nudge">Scroll to drive ↓</span>
+          <span className="js-fade inline-block animate-nudge">Scroll to drive down</span>
         </p>
 
       </div>
 
-
     </section>
   );
 }
+
+
+
+
+
