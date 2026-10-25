@@ -19,7 +19,7 @@ const INK = "#0b0b0c";        // lit letter on the painted trail
 // so the paint always appears from underneath the car body.
 const TRAIL_EDGE = 0.5;
 // Fixed pixel width of the soft gradient feather at the trail leading edge.
-const FEATHER_PX = 120;
+const FEATHER_PX = 80;
 
 export function HeroScene() {
   const root = useRef<HTMLElement>(null);
@@ -47,7 +47,7 @@ export function HeroScene() {
           // Reduced motion: snap to finished state immediately.
           if ((ctx.conditions as { reduce?: boolean }).reduce) {
             gsap.set(car, { x: () => road.clientWidth - car.offsetWidth });
-            gsap.set(trail, { "--tw": (road.clientWidth + FEATHER_PX) + "px" });
+            gsap.set(trail, { width: road.clientWidth + FEATHER_PX + "px" });
             gsap.set(letters, { color: INK });
             gsap.set(fills, { scaleY: 1 });
             gsap.set(cards, { autoAlpha: 1, y: 0 });
@@ -79,20 +79,16 @@ export function HeroScene() {
           };
           measure();
 
-          // Give GSAP ownership of --tw (trail width in px).
-          // The CSS mask-image reads this so the feather is always
-          // FEATHER_PX wide, regardless of how far the trail has grown.
-          gsap.set(trail, { "--tw": "0px" });
+          // Initialize trail width
+          gsap.set(trail, { width: 0 });
 
-          const setTrailWidth = gsap.quickSetter(trail, "--tw", "px") as (v: number) => void;
+          const setTrailWidth = gsap.quickSetter(trail, "width", "px") as (v: number) => void;
           const tiltTo = gsap.quickTo(carBody, "rotation", { duration: 0.5, ease: "power3.out" });
 
           const sync = (self?: ScrollTrigger) => {
             const carX = gsap.getProperty(car, "x") as number;
 
-            // --tw = pixel position where fully-opaque paint ends.
-            // Solid green fills behind the car; gradient fades to transparent
-            // right at the car's left edge â€” feather extends 250 px to the left.
+            // Trail width extends to the car's left edge; the gradient fades over FEATHER_PX
             setTrailWidth(
               gsap.utils.clamp(0, roadWidth + FEATHER_PX, carX)
             );
@@ -199,17 +195,15 @@ export function HeroScene() {
           <div className="absolute inset-x-0 bottom-0 h-px bg-white/20" />
 
           {/*
-            Paint trail: full-width div always present, revealed left-to-right
-            by a CSS mask driven by --tw (px). Mask is fully opaque up to
-            (--tw - 72px) then fades to transparent at --tw, giving a constant
-            72 px soft feather at the leading edge at every scroll position.
+            Paint trail: standard CSS background gradient width-driven by GSAP.
+            Solid lime green up to (width - 120px), smoothly fading to transparent at the car.
+            Cross-browser, zero mask bugs, works identically locally and hosted.
           */}
           <div
-            className="js-trail absolute inset-x-0 inset-y-[15%] bg-paint"
+            className="js-trail pointer-events-none absolute inset-y-[15%] left-0 w-0"
             style={{
-              maskImage: "linear-gradient(to right, black calc(var(--tw, 0px) - 120px), transparent var(--tw, 0px))",
-              WebkitMaskImage: "linear-gradient(to right, black calc(var(--tw, 0px) - 120px), transparent var(--tw, 0px))",
-            } as React.CSSProperties}
+              background: `linear-gradient(to right, var(--color-paint) calc(100% - ${FEATHER_PX}px), transparent 100%)`,
+            }}
           />
 
           {/* headline */}
@@ -239,6 +233,7 @@ export function HeroScene() {
                 height={724}
                 width={2172}
                 priority
+                onLoad={() => ScrollTrigger.refresh()}
                 className="h-full w-auto object-contain drop-shadow-2xl"
               />
             </div>
