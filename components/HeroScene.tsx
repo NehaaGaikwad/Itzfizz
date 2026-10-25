@@ -59,7 +59,7 @@ export function HeroScene() {
           // Reduced motion: snap to finished state immediately.
           if ((ctx.conditions as { reduce?: boolean }).reduce) {
             gsap.set(car, { x: () => road.clientWidth - car.offsetWidth * END_CAR_OFFSET_RATIO });
-            gsap.set(trailSolid, { autoAlpha: 1, width: road.clientWidth + FEATHER_PX });
+            gsap.set(trailSolid, { opacity: 1, width: road.clientWidth + FEATHER_PX });
             gsap.set(letters, { color: INK });
             gsap.set(fills, { scaleY: 1 });
             gsap.set(cards, { autoAlpha: 1, y: 0 });
@@ -93,7 +93,7 @@ export function HeroScene() {
 
           // Start hidden; the element keeps a minimum width equal to the
           // feather, making its fixed-pixel gradient valid at every point.
-          gsap.set(trailSolid, { autoAlpha: 0, width: FEATHER_PX });
+          gsap.set(trailSolid, { opacity: 0, width: FEATHER_PX });
 
           const setTrailWidth = gsap.quickSetter(trailSolid, "width", "px") as (v: number) => void;
           const setTrailOpacity = gsap.quickSetter(trailSolid, "opacity") as (v: number) => void;
