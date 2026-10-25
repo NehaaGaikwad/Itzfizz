@@ -1,11 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import Car from "./Car";
 import { stats } from "../lib/stats";
+
+const carImageSrc = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/images/glossy-red-supercar.png`;
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -174,24 +176,43 @@ export function HeroScene() {
       <header className="flex items-center justify-between px-5 pt-6 sm:px-10">
         <span className="js-fade font-display text-lg font-bold tracking-[0.2em] text-chalk">ITZFIZZ</span>
         <span className="js-fade text-xs uppercase tracking-[0.35em] text-chalk/40">
-          Impact report · 2026
+          Neha Gaikwad
         </span>
       </header>
 
-      {/* road */}
-      <div className="flex flex-1 flex-col justify-center gap-4">
-        <div className="js-road relative h-[clamp(6rem,min(24vh,30vw),14rem)] w-full overflow-hidden bg-asphalt">
-          <div className="lane absolute inset-x-0 top-[7%] h-[3px]" />
-          <div className="lane absolute inset-x-0 bottom-[7%] h-[3px]" />
-          <div className="absolute inset-x-0 top-0 h-px bg-white/10" />
-          <div className="absolute inset-x-0 bottom-0 h-px bg-white/10" />
+      {/* scene: 2 cards · road · 2 cards */}
+      <div className="flex flex-1 flex-col justify-center gap-3 px-5 sm:px-10">
 
-          {/* paint trail: same height as the car body, scaled with transform (never width) */}
+        {/* top 2 stat cards */}
+        <ul className="grid grid-cols-2 gap-3 sm:gap-4">
+          {stats.slice(0, 2).map((s) => (
+            <li
+              key={s.value + s.label}
+              className="js-stat relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5"
+            >
+              <div className="js-stat-fill absolute inset-0 origin-bottom scale-y-0" style={{ background: s.accent }} />
+              <div className="js-stat-text relative text-chalk">
+                <p className="font-display text-3xl font-bold sm:text-4xl">{s.value}</p>
+                <p className="mt-1 text-xs leading-snug text-chalk/70 sm:text-sm">{s.label}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {/* road */}
+        <div className="js-road relative h-[clamp(6rem,min(22vh,28vw),13rem)] w-full overflow-hidden bg-asphalt">
+          {/* white dashed edge lines */}
+          <div className="absolute inset-x-0 top-[7%] h-[3px] bg-[repeating-linear-gradient(to_right,white_0_48px,transparent_48px_96px)]" />
+          <div className="absolute inset-x-0 bottom-[7%] h-[3px] bg-[repeating-linear-gradient(to_right,white_0_48px,transparent_48px_96px)]" />
+          <div className="absolute inset-x-0 top-0 h-px bg-white/20" />
+          <div className="absolute inset-x-0 bottom-0 h-px bg-white/20" />
+
+          {/* paint trail */}
           <div className="js-trail absolute inset-x-0 inset-y-[15%] origin-left scale-x-0 bg-paint will-change-transform" />
 
-          {/* headline */}
+          {/* headline — right-padded so car never overlaps text */}
           <h1
-            className="absolute inset-0 flex items-center justify-center gap-[0.12em] font-display text-[clamp(1.5rem,5.6vw,6.5rem)] font-bold leading-none [perspective:600px]"
+            className="absolute inset-0 flex items-center justify-center gap-[0.12em] pr-[clamp(8rem,22vw,18rem)] font-display text-[clamp(1.5rem,5.6vw,6.5rem)] font-bold leading-none [perspective:600px]"
             aria-label="Welcome Itzfizz"
           >
             {HEADLINE.split("").map((ch, i) => (
@@ -206,37 +227,46 @@ export function HeroScene() {
             ))}
           </h1>
 
-          {/* car: outer element is scroll-driven, inner handles intro + tilt */}
+          {/* car */}
           <div className="js-car absolute inset-y-0 left-0 z-10 flex items-center will-change-transform">
             <div className="js-car-body h-[86%]">
-              <Car className="h-full w-auto drop-shadow-2xl" />
+              <Image
+                alt=""
+                aria-hidden="true"
+                src={carImageSrc}
+                height={724}
+                width={2172}
+                priority
+                className="h-full w-auto object-contain drop-shadow-2xl"
+              />
             </div>
           </div>
         </div>
 
+        {/* bottom 2 stat cards */}
+        <ul className="grid grid-cols-2 gap-3 sm:gap-4">
+          {stats.slice(2).map((s) => (
+            <li
+              key={s.value + s.label}
+              className="js-stat relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5"
+            >
+              <div className="js-stat-fill absolute inset-0 origin-bottom scale-y-0" style={{ background: s.accent }} />
+              <div className="js-stat-text relative text-chalk">
+                <p className="font-display text-3xl font-bold sm:text-4xl">{s.value}</p>
+                <p className="mt-1 text-xs leading-snug text-chalk/70 sm:text-sm">{s.label}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {/* scroll hint */}
         <p className="js-hint text-center text-[10px] uppercase tracking-[0.4em] text-chalk/40">
           <span className="js-fade inline-block animate-nudge">Scroll to drive ↓</span>
         </p>
+
       </div>
 
-      {/* metrics */}
-      <ul className="grid grid-cols-2 gap-3 px-5 pb-6 sm:gap-4 sm:px-10 lg:grid-cols-4">
-        {stats.map((s) => (
-          <li
-            key={s.value + s.label}
-            className="js-stat relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-6"
-          >
-            <div
-              className="js-stat-fill absolute inset-0 origin-bottom scale-y-0"
-              style={{ background: s.accent }}
-            />
-            <div className="js-stat-text relative text-chalk">
-              <p className="font-display text-3xl font-bold sm:text-5xl">{s.value}</p>
-              <p className="mt-1 text-xs leading-snug text-chalk/70 sm:text-sm">{s.label}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
+
     </section>
   );
 }
