@@ -12,6 +12,15 @@
   --color-ember: #ff7a2f;
 }
 
+:root {
+  --color-ink: #0b0b0c;
+  --color-asphalt: #18181b;
+  --color-paint: #c8f04a;
+  --color-sky: #6ac9ff;
+  --color-chalk: #f1efe9;
+  --color-ember: #ff7a2f;
+}
+
 html,
 body {
   background: var(--color-ink);
